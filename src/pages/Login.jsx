@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { AlertTriangle, Bus, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Bus, Lock, Mail, ArrowRight, ShieldCheck, MapPin } from 'lucide-react';
+import StopRecorder from './StopRecorder';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showAdminStops, setShowAdminStops] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,6 +26,20 @@ export default function Login() {
     }
     setLoading(false);
   };
+
+  if (showAdminStops) {
+    return (
+      <div className="relative">
+        <StopRecorder />
+        <button 
+          onClick={() => setShowAdminStops(false)}
+          className="fixed top-10 right-10 z-[100] bg-white/20 backdrop-blur-md p-3 rounded-full text-slate-800 border border-white/40 shadow-xl"
+        >
+          <ArrowRight className="rotate-180" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f1f5f9] flex justify-center items-start md:pt-10 font-sans relative">
@@ -129,6 +145,14 @@ export default function Login() {
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAdminStops(true)}
+                className="w-full mt-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-2xl py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                <MapPin size={14} /> Durak Ayarları (Admin)
               </button>
             </form>
           </motion.div>
