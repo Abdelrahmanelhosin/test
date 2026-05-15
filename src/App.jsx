@@ -65,8 +65,8 @@ function AppContent({ session, setSession, profile, setProfile, loading, setLoad
   }
 
   const renderContent = () => {
-    if (!session) return <Login />;
     if (location.pathname === '/admin/stops') return <StopRecorder />;
+    if (!session) return <Login />;
 
     const isDetailPage = location.pathname.includes('/driver/');
 
