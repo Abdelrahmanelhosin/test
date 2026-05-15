@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { AlertTriangle, Bus, Lock, Mail, Navigation, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Bus, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -26,69 +26,71 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex justify-center items-start md:pt-10 font-sans">
-      <div className="w-full max-w-md bg-slate-900 h-screen md:h-[850px] relative shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] md:rounded-[3.5rem] flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-[#f1f5f9] flex justify-center items-start md:pt-10 font-sans">
+      <div className="w-full max-w-md bg-[#f8fafc] h-screen md:h-[850px] relative shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] md:rounded-[3.5rem] border border-slate-200 flex flex-col overflow-hidden">
         
-        {/* Animated Background Blobs */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        {/* Animated 3D Image at Bottom */}
+        <div className="absolute bottom-0 left-0 w-full h-1/2 overflow-hidden pointer-events-none">
+           {/* Top fade gradient so image blends into background */}
+           <div className="absolute top-0 w-full h-32 bg-gradient-to-b from-[#f8fafc] to-transparent z-10" />
+           <motion.img 
+             initial={{ y: 50, opacity: 0 }}
+             animate={{ y: 0, opacity: 1 }}
+             transition={{ duration: 1.5, ease: "easeOut" }}
+             src="/login_3d_bg.png" 
+             alt="City Illustration" 
+             className="w-full h-full object-cover object-bottom mix-blend-multiply opacity-90"
+           />
+           {/* Floating abstract elements for extra movement */}
            <motion.div 
-             animate={{ 
-               y: [0, -20, 0],
-               x: [0, 10, 0],
-               scale: [1, 1.05, 1]
-             }}
-             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-             className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-600/30 rounded-full blur-[100px]" 
+             animate={{ y: [0, -15, 0], opacity: [0.5, 0.8, 0.5] }}
+             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+             className="absolute bottom-20 left-10 w-8 h-8 bg-emerald-500 rounded-full blur-xl"
            />
            <motion.div 
-             animate={{ 
-               y: [0, 30, 0],
-               x: [0, -20, 0],
-               scale: [1, 1.1, 1]
-             }}
-             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-             className="absolute top-1/2 -right-32 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px]" 
+             animate={{ y: [0, 20, 0], opacity: [0.3, 0.6, 0.3] }}
+             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+             className="absolute bottom-40 right-10 w-12 h-12 bg-indigo-500 rounded-full blur-xl"
            />
-           <div className="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-slate-900 to-transparent" />
         </div>
 
-        <div className="relative z-10 flex flex-col justify-center items-center h-full p-8">
+        <div className="relative z-20 flex flex-col items-center pt-20 px-8 h-full">
           
           {/* Logo & Welcome Text */}
           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
             className="w-full text-center mb-10"
           >
-             <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.3)] mb-6 rotate-3">
-                <Bus size={36} className="text-white -rotate-3" />
+             <div className="w-24 h-24 mx-auto bg-[#114B36] rounded-[2rem] flex items-center justify-center shadow-[0_20px_40px_rgba(17,75,54,0.3)] mb-6 border-4 border-white rotate-3">
+                <Bus size={42} className="text-white -rotate-3" />
              </div>
-             <h1 className="text-3xl font-black text-white tracking-tight">Kaptan Modu</h1>
-             <p className="text-emerald-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2">Sisteme Hoş Geldiniz</p>
+             <h1 className="text-4xl font-black text-slate-800 tracking-tight">Kaptan Modu</h1>
+             <p className="text-emerald-600 font-black uppercase tracking-[0.2em] text-[10px] mt-2 bg-emerald-50 py-1.5 px-4 rounded-full inline-block">Sisteme Hoş Geldiniz</p>
           </motion.div>
 
           {/* Login Card */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-full bg-white/10 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 shadow-2xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 100 }}
+            className="w-full bg-white/90 backdrop-blur-xl border border-white rounded-[2.5rem] p-7 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)]"
           >
             {error && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="bg-red-500/10 text-red-400 border border-red-500/20 p-4 rounded-2xl text-sm font-bold mb-6 flex items-center gap-3"
+                className="bg-red-50 text-red-600 border border-red-100 p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest mb-6 flex items-center gap-3 shadow-inner"
               >
-                <AlertTriangle size={18} className="shrink-0" />
+                <AlertTriangle size={20} className="shrink-0 text-red-500" />
                 <span>{error}</span>
               </motion.div>
             )}
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-Posta Adresiniz</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">E-Posta Adresi</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Mail size={18} className="text-slate-400" />
@@ -98,14 +100,14 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full bg-slate-900/50 border border-slate-700 text-white rounded-2xl pl-11 pr-4 py-3.5 outline-none focus:border-emerald-500 focus:bg-slate-900 transition-all font-medium placeholder-slate-600"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl pl-11 pr-4 py-4 outline-none focus:border-emerald-500 focus:bg-white focus:shadow-[0_0_0_4px_rgba(16,185,129,0.1)] transition-all font-bold placeholder-slate-400"
                     placeholder="kaptan@ornek.com"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Şifreniz</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Şifre</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Lock size={18} className="text-slate-400" />
@@ -115,7 +117,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full bg-slate-900/50 border border-slate-700 text-white rounded-2xl pl-11 pr-4 py-3.5 outline-none focus:border-emerald-500 focus:bg-slate-900 transition-all font-medium placeholder-slate-600"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl pl-11 pr-4 py-4 outline-none focus:border-emerald-500 focus:bg-white focus:shadow-[0_0_0_4px_rgba(16,185,129,0.1)] transition-all font-bold placeholder-slate-400"
                     placeholder="••••••••"
                   />
                 </div>
@@ -124,25 +126,28 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:shadow-[0_15px_30px_rgba(16,185,129,0.4)] active:scale-[0.98] transition-all disabled:opacity-70 disabled:active:scale-100 flex justify-center items-center gap-2 group"
+                className="w-full mt-4 bg-[#114B36] text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest shadow-[0_15px_30px_rgba(17,75,54,0.3)] hover:shadow-[0_20px_40px_rgba(17,75,54,0.4)] active:scale-[0.98] transition-all disabled:opacity-70 disabled:active:scale-100 flex justify-center items-center gap-2 group relative overflow-hidden"
               >
+                {/* Button shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                
                 {loading ? (
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <span className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
                 ) : (
                   <>
                     SİSTEME GİRİŞ YAP
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
             </form>
           </motion.div>
 
-        </div>
+          <div className="mt-auto pb-8 flex items-center gap-2 text-slate-400 opacity-80">
+             <ShieldCheck size={14} className="text-emerald-600" />
+             <span className="text-[9px] font-black uppercase tracking-widest">End-to-End Güvenlik</span>
+          </div>
 
-        <div className="absolute bottom-8 w-full flex justify-center items-center gap-2 text-slate-500 opacity-50">
-           <Navigation size={12} />
-           <span className="text-[9px] font-black uppercase tracking-[0.2em]">Güvenli Bağlantı SSS-256</span>
         </div>
       </div>
     </div>
