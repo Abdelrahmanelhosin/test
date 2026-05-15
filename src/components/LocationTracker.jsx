@@ -4,26 +4,53 @@ import { MapPin, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LocationTracker = ({ userProfile }) => {
-  const [permissionState, setPermissionState] = useState('prompt'); // 'granted', 'prompt', 'denied'
+  const [permissionState, setPermissionState] = useState(localStorage.getItem('locationGranted') === 'true' ? 'granted' : 'prompt');
 
   useEffect(() => {
-    // Check initial permission state
+    // 1. If we already have a record that it's granted, we can assume it's okay unless it fails
+    if (localStorage.getItem('locationGranted') === 'true') {
+      setPermissionState('granted');
+    }
+
+    // 2. Check permissions API if available (Chrome/Android)
     if (navigator.permissions) {
       navigator.permissions.query({ name: 'geolocation' }).then(result => {
-        setPermissionState(result.state);
-        result.onchange = () => setPermissionState(result.state);
+        if (result.state === 'granted') {
+          setPermissionState('granted');
+          localStorage.setItem('locationGranted', 'true');
+        } else if (result.state === 'denied') {
+          setPermissionState('denied');
+        }
+        result.onchange = () => {
+           setPermissionState(result.state);
+           if (result.state === 'granted') localStorage.setItem('locationGranted', 'true');
+        };
       });
     }
+
+    // 3. Always try a "Silent Check" on mount
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setPermissionState('granted');
+        localStorage.setItem('locationGranted', 'true');
+      },
+      (err) => {
+        // If not granted, and no record in localStorage, show prompt
+        if (err.code === 1 && localStorage.getItem('locationGranted') !== 'true') {
+          setPermissionState('denied');
+        }
+      },
+      { enableHighAccuracy: false, timeout: 2000 } // Fast silent check
+    );
 
     if (!userProfile) return;
 
     let watchId;
-    
-    // Only start tracking if granted (or if we don't know, we'll try)
     const startTracking = () => {
       watchId = navigator.geolocation.watchPosition(
         async (position) => {
           setPermissionState('granted');
+          localStorage.setItem('locationGranted', 'true');
           const { latitude, longitude, speed, heading } = position.coords;
           
           await supabase.from('vehicle_locations').upsert({
@@ -36,8 +63,10 @@ const LocationTracker = ({ userProfile }) => {
           }, { onConflict: 'driver_id' });
         },
         (error) => {
-           console.error('GPS Hata:', error);
-           if (error.code === 1) setPermissionState('denied'); // Permission denied
+           if (error.code === 1) {
+             setPermissionState('denied');
+             localStorage.removeItem('locationGranted');
+           }
         },
         { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
       );
@@ -52,7 +81,10 @@ const LocationTracker = ({ userProfile }) => {
 
   const requestPermission = () => {
     navigator.geolocation.getCurrentPosition(
-      () => setPermissionState('granted'),
+      () => {
+        setPermissionState('granted');
+        localStorage.setItem('locationGranted', 'true');
+      },
       (err) => {
          if (err.code === 1) setPermissionState('denied');
       },
