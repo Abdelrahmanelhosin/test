@@ -1,45 +1,100 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Clock, ChevronRight, CheckCircle2, Navigation } from 'lucide-react';
-
-const STOPS = [
-  { id: 1, name: 'Tuzla Sahil', time: '08:00', status: 'completed' },
-  { id: 2, name: 'İçmeler Köprüsü', time: '08:15', status: 'completed' },
-  { id: 3, name: 'Pendik YHT', time: '08:30', status: 'current' },
-  { id: 4, name: 'Kartal Metro', time: '08:45', status: 'upcoming' },
-  { id: 5, name: 'Maltepe Sahil', time: '09:05', status: 'upcoming' },
-  { id: 6, name: 'Bostancı İskele', time: '09:20', status: 'upcoming' },
-  { id: 7, name: 'Kadıköy Merkez', time: '09:45', status: 'upcoming' },
-];
+import { supabase } from '../lib/supabase';
 
 const DriverSchedule = () => {
+  const [stops, setStops] = useState([]);
+  const [currentLocation, setCurrentLocation] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  };
+
+  const fetchData = async () => {
+    // Fetch Stops
+    const { data: stopData } = await supabase.from('stops').select('*').order('sequence_order', { ascending: true });
+    
+    // Fetch Current Location
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && stopData) {
+       const { data: locData } = await supabase.from('vehicle_locations').select('*').eq('driver_id', user.id).single();
+       if (locData) {
+          setCurrentLocation(locData);
+          
+          // Determine status of each stop
+          let nearestStopIdx = 0;
+          let minDist = Infinity;
+          stopData.forEach((stop, idx) => {
+            const dist = calculateDistance(locData.latitude, locData.longitude, stop.latitude, stop.longitude);
+            if (dist < minDist) {
+              minDist = dist;
+              nearestStopIdx = idx;
+            }
+          });
+
+          const mappedStops = stopData.map((stop, index) => {
+             let status = 'upcoming';
+             if (index < nearestStopIdx) status = 'completed';
+             if (index === nearestStopIdx) status = 'current';
+             
+             // Mock time for visual
+             const time = new Date();
+             time.setMinutes(time.getMinutes() + (index - nearestStopIdx) * 15);
+             const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+
+             return { ...stop, status, time: timeStr };
+          });
+          setStops(mappedStops);
+       } else {
+          // No location yet
+          setStops(stopData.map(s => ({ ...s, status: 'upcoming', time: '--:--' })));
+       }
+    } else if (stopData) {
+       setStops(stopData.map(s => ({ ...s, status: 'upcoming', time: '--:--' })));
+    }
+  };
+
+  const currentStopIndex = stops.findIndex(s => s.status === 'current');
+  const remainingStops = stops.length - (currentStopIndex >= 0 ? currentStopIndex : 0);
+
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full relative font-sans">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md px-6 py-5 sticky top-0 z-30 border-b border-slate-100 shadow-sm flex justify-between items-center">
+      <header className="bg-white/95 backdrop-blur-md px-6 py-5 sticky top-0 z-30 border-b border-slate-100 shadow-sm flex justify-between items-center">
         <div>
           <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest leading-none mb-1">GÜNCEL SEFER</p>
-          <h1 className="text-lg font-black text-slate-800">500T Hattı Durakları</h1>
+          <h1 className="text-base font-black text-slate-800 leading-tight">Yenihal - Yaramış Hattı</h1>
         </div>
-        <div className="bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
-           <span className="text-[10px] font-black text-emerald-700 uppercase">7 Durak</span>
+        <div className="bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 flex-shrink-0">
+           <span className="text-[10px] font-black text-emerald-700 uppercase">{stops.length} Durak</span>
         </div>
       </header>
 
-      {/* Schedule Timeline - Scrollable area with more padding at bottom */}
+      {/* Schedule Timeline */}
       <div className="flex-1 overflow-y-auto no-scrollbar p-6 pb-64">
         <div className="relative">
           {/* Vertical Line */}
           <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-100" />
 
-          <div className="space-y-8">
-            {STOPS.map((stop, index) => (
+          <div className="space-y-6">
+            {stops.map((stop, index) => (
               <motion.div 
                 key={stop.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="relative flex items-start gap-6 group"
+                className="relative flex items-start gap-5 group"
               >
                 {/* Status Indicator */}
                 <div className="relative z-10 mt-1">
@@ -62,7 +117,7 @@ const DriverSchedule = () => {
                 <div className={`flex-1 p-4 rounded-3xl border transition-all ${
                   stop.status === 'current' 
                     ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' 
-                    : 'bg-white border-slate-50'
+                    : 'bg-white border-slate-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.02)]'
                 }`}>
                   <div className="flex justify-between items-start">
                     <div>
@@ -82,15 +137,15 @@ const DriverSchedule = () => {
                     </div>
                     
                     {stop.status === 'current' && (
-                      <span className="bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">
+                      <span className="bg-indigo-600 text-white text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest shadow-md">
                         BURADASINIZ
                       </span>
                     )}
                   </div>
 
-                  {stop.status === 'upcoming' && index === STOPS.findIndex(s => s.status === 'upcoming') && (
+                  {stop.status === 'upcoming' && index === currentStopIndex + 1 && (
                     <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
-                       <span className="text-[10px] font-bold text-slate-400 uppercase">Sıradaki Durak</span>
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sıradaki Durak</span>
                        <ChevronRight size={14} className="text-slate-300" />
                     </div>
                   )}
@@ -101,26 +156,26 @@ const DriverSchedule = () => {
         </div>
       </div>
       
-      {/* FLOAT STATS BAR - Raised to avoid overlap with Nav Bar */}
-      <div className="absolute bottom-36 left-0 right-0 px-6 z-20">
+      {/* FLOAT STATS BAR */}
+      <div className="absolute bottom-36 left-0 right-0 px-5 z-20">
          <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-[#114B36] p-5 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex justify-between items-center text-white border border-white/10"
+            className="bg-[#0c4a34] p-5 rounded-[2rem] shadow-2xl flex justify-between items-center text-white border border-white/10"
          >
-            <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center border border-white/5">
-                  <MapPin size={20} className="text-emerald-300" />
+            <div className="flex items-center gap-4">
+               <div className="w-12 h-12 bg-[#10b981]/20 rounded-2xl flex items-center justify-center border border-[#10b981]/10 text-[#10b981]">
+                  <MapPin size={24} />
                </div>
                <div>
-                  <p className="text-[9px] font-black opacity-50 uppercase tracking-widest leading-none mb-1">DURAK BİLGİSİ</p>
-                  <p className="text-xs font-black uppercase">4 DURAK KALDI</p>
+                  <p className="text-[8px] font-bold text-[#10b981] uppercase tracking-widest mb-0.5">KALAN DURAK</p>
+                  <p className="text-sm font-black uppercase text-white">{remainingStops} DURAK KALDI</p>
                </div>
             </div>
-            <div className="h-8 w-px bg-white/10 mx-2" />
-            <div className="text-right">
-               <p className="text-[9px] font-black opacity-50 uppercase tracking-widest leading-none mb-1">VARALAN SÜRE</p>
-               <p className="text-xs font-black uppercase text-emerald-300">45 DK</p>
+            <div className="h-10 w-px bg-white/10 mx-2" />
+            <div className="text-right flex flex-col justify-center">
+               <p className="text-[8px] font-bold text-[#10b981] uppercase tracking-widest mb-0.5">TAHMİNİ SÜRE</p>
+               <p className="text-xl font-black uppercase text-white tracking-tighter leading-none">{remainingStops * 15} <span className="text-[10px]">DK</span></p>
             </div>
          </motion.div>
       </div>
