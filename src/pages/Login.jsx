@@ -26,32 +26,22 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex justify-center items-start md:pt-10 font-sans">
-      <div className="w-full max-w-md bg-[#f8fafc] h-screen md:h-[850px] relative shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] md:rounded-[3.5rem] border border-slate-200 flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-[#f1f5f9] flex justify-center items-start md:pt-10 font-sans relative">
+      <div className="w-full max-w-md bg-white/20 h-screen md:h-[850px] relative shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] md:rounded-[3.5rem] border border-white/40 flex flex-col overflow-hidden">
         
-        {/* Animated 3D Image at Bottom */}
-        <div className="absolute bottom-0 left-0 w-full h-1/2 overflow-hidden pointer-events-none">
-           {/* Top fade gradient so image blends into background */}
-           <div className="absolute top-0 w-full h-32 bg-gradient-to-b from-[#f8fafc] to-transparent z-10" />
+        {/* Full Screen Animated 3D Image */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
            <motion.img 
-             initial={{ y: 50, opacity: 0 }}
-             animate={{ y: 0, opacity: 1 }}
+             initial={{ scale: 1.05, opacity: 0 }}
+             animate={{ scale: 1, opacity: 1 }}
              transition={{ duration: 1.5, ease: "easeOut" }}
              src="/login_3d_bg.png" 
              alt="City Illustration" 
-             className="w-full h-full object-cover object-bottom mix-blend-multiply opacity-90"
+             className="w-full h-full object-cover object-center"
            />
-           {/* Floating abstract elements for extra movement */}
-           <motion.div 
-             animate={{ y: [0, -15, 0], opacity: [0.5, 0.8, 0.5] }}
-             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-             className="absolute bottom-20 left-10 w-8 h-8 bg-emerald-500 rounded-full blur-xl"
-           />
-           <motion.div 
-             animate={{ y: [0, 20, 0], opacity: [0.3, 0.6, 0.3] }}
-             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-             className="absolute bottom-40 right-10 w-12 h-12 bg-indigo-500 rounded-full blur-xl"
-           />
+           {/* Glassmorphism Overlay to make text readable */}
+           <div className="absolute inset-0 bg-white/60 backdrop-blur-[8px]" />
+           <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/50 to-transparent" />
         </div>
 
         <div className="relative z-20 flex flex-col items-center pt-20 px-8 h-full">
@@ -66,8 +56,8 @@ export default function Login() {
              <div className="w-24 h-24 mx-auto bg-[#114B36] rounded-[2rem] flex items-center justify-center shadow-[0_20px_40px_rgba(17,75,54,0.3)] mb-6 border-4 border-white rotate-3">
                 <Bus size={42} className="text-white -rotate-3" />
              </div>
-             <h1 className="text-4xl font-black text-slate-800 tracking-tight">Kaptan Modu</h1>
-             <p className="text-emerald-600 font-black uppercase tracking-[0.2em] text-[10px] mt-2 bg-emerald-50 py-1.5 px-4 rounded-full inline-block">Sisteme Hoş Geldiniz</p>
+             <h1 className="text-4xl font-black text-slate-800 tracking-tight drop-shadow-sm">Kaptan Modu</h1>
+             <p className="text-emerald-700 font-black uppercase tracking-[0.2em] text-[10px] mt-2 bg-emerald-50/80 backdrop-blur-md border border-emerald-100/50 py-1.5 px-4 rounded-full inline-block shadow-sm">Sisteme Hoş Geldiniz</p>
           </motion.div>
 
           {/* Login Card */}
@@ -75,7 +65,7 @@ export default function Login() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 100 }}
-            className="w-full bg-white/90 backdrop-blur-xl border border-white rounded-[2.5rem] p-7 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)]"
+            className="w-full bg-white/80 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] p-7 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)]"
           >
             {error && (
               <motion.div 
