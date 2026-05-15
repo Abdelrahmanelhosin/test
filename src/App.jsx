@@ -64,19 +64,13 @@ function AppContent({ session, setSession, profile, setProfile, loading, setLoad
     );
   }
 
-  if (!session) {
-    return <Login />;
-  }
+  const renderContent = () => {
+    if (!session) return <Login />;
+    if (location.pathname === '/admin/stops') return <StopRecorder />;
 
-  if (location.pathname === '/admin/stops') {
-    return <StopRecorder />;
-  }
+    const isDetailPage = location.pathname.includes('/driver/');
 
-  const isDetailPage = location.pathname.includes('/driver/');
-
-  return (
-    <>
-      <LocationTracker userProfile={profile} />
+    return (
       <div className="min-h-screen bg-[#f1f5f9] flex justify-center items-start md:pt-10 overflow-hidden font-sans">
         {/* Mobile Wrapper */}
         <div className="w-full max-w-md bg-[#f8fafc] h-screen md:h-[850px] relative shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] md:rounded-[3.5rem] border border-slate-200 flex flex-col overflow-hidden">
@@ -125,13 +119,20 @@ function AppContent({ session, setSession, profile, setProfile, loading, setLoad
                   </Link>
                   <span className="text-[10px] font-black text-emerald-800 mt-1 uppercase tracking-tighter">CANLI</span>
                 </div>
-                <NavButton to="/reports" icon={<AlertTriangle size={22} />} label="Arıza" />
+                <NavButton to="/fleet" icon={<Navigation size={22} />} label="Filo" />
                 <NavButton to="/profile" icon={<User size={22} />} label="Profil" />
               </div>
             </div>
           )}
         </div>
       </div>
+    );
+  };
+
+  return (
+    <>
+      <LocationTracker userProfile={profile} />
+      {renderContent()}
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
