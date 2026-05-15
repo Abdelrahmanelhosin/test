@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Map as MapIcon, Route as RouteIcon, User, Bell, Radio, AlertTriangle, List, LogOut } from 'lucide-react';
+import { Home, Map as MapIcon, Route as RouteIcon, User, Bell, Radio, AlertTriangle, List, LogOut, Navigation } from 'lucide-react';
 import DriverHome from './pages/DriverHome';
 import DriverMap from './pages/DriverMap';
 import DriverSchedule from './pages/DriverSchedule';
