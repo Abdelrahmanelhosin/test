@@ -23,6 +23,8 @@ import AdminSchedules from './pages/admin/AdminSchedules';
 import AdminReports from './pages/admin/AdminReports';
 import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import AdminStops from './pages/admin/AdminStops';
+import AdminPassengerReports from './pages/admin/AdminPassengerReports';
+import DriverPassenger from './pages/DriverPassenger';
 import AdminMap from './pages/admin/AdminMap';
 import AdminShiftLogs from './pages/admin/AdminShiftLogs';
 import AdminDrivers from './pages/admin/AdminDrivers';
@@ -308,6 +310,7 @@ function AppContent({ session, setSession, profile, setProfile, loading, setLoad
                     <Route path="/admin/vehicles" element={<PageWrapper><AdminVehicles /></PageWrapper>} />
                     <Route path="/admin/schedules" element={<PageWrapper><AdminSchedules /></PageWrapper>} />
                     <Route path="/admin/reports" element={<PageWrapper><AdminReports /></PageWrapper>} />
+                    <Route path="/admin/passengers" element={<PageWrapper><AdminPassengerReports /></PageWrapper>} />
                     <Route path="/admin/announcements" element={<PageWrapper><AdminAnnouncements /></PageWrapper>} />
                     <Route path="/admin/stops" element={<PageWrapper><AdminStops /></PageWrapper>} />
                     <Route path="/admin/map" element={<PageWrapper><AdminMap /></PageWrapper>} />
@@ -321,6 +324,7 @@ function AppContent({ session, setSession, profile, setProfile, loading, setLoad
                 ) : (
                   <>
                     <Route path="/" element={<PageWrapper><DriverHome /></PageWrapper>} />
+                    <Route path="/passengers" element={<PageWrapper><DriverPassenger /></PageWrapper>} />
                     <Route path="/map" element={<PageWrapper><DriverMap /></PageWrapper>} />
                     <Route path="/schedule" element={<PageWrapper><DriverSchedule /></PageWrapper>} />
                     <Route path="/reports" element={<PageWrapper><DriverReports /></PageWrapper>} />
@@ -341,8 +345,8 @@ function AppContent({ session, setSession, profile, setProfile, loading, setLoad
               <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/60 px-6 py-3 flex justify-between items-center relative">
                 {isAdminMode ? (
                   <>
-                    <NavButton to="/admin" icon={<Home size={20} />} label="Panel" />
-                    <NavButton to="/admin/vehicles" icon={<Bus size={20} />} label="Filo" />
+                    <NavButton to="/admin" icon={<Home size={20} />} label="Ana" />
+                    <NavButton to="/admin/tracking" icon={<Activity size={20} />} label="Takip" />
                     <div className="relative -top-8 flex flex-col items-center">
                       <Link to="/admin/map">
                         <motion.div whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }} className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-[#f8fafc]">
@@ -351,13 +355,13 @@ function AppContent({ session, setSession, profile, setProfile, loading, setLoad
                       </Link>
                       <span className="text-[10px] font-black text-indigo-800 mt-1 uppercase tracking-tighter">CANLI</span>
                     </div>
+                    <NavButton to="/admin/passengers" icon={<Users size={20} />} label="Yolcu" />
                     <NavButton to="/admin/schedules" icon={<Calendar size={20} />} label="Sefer" />
-                    <NavButton to="/admin/reports" icon={<AlertTriangle size={20} />} label="Arıza" />
                   </>
                 ) : (
                   <>
-                    <NavButton to="/" icon={<Home size={22} />} label="Ana Sayfa" />
-                    <NavButton to="/schedule" icon={<List size={22} />} label="Sefer" />
+                    <NavButton to="/" icon={<Home size={22} />} label="Ana" />
+                    <NavButton to="/passengers" icon={<Users size={22} />} label="Yolcu" />
                     <div className="relative -top-8 flex flex-col items-center">
                       <Link to="/map">
                         <motion.div whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }} className="w-16 h-16 bg-[#114B36] rounded-full flex items-center justify-center shadow-2xl border-4 border-[#f8fafc]">
