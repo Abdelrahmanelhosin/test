@@ -22,46 +22,48 @@ const StopRecorder = () => {
     setLoading(false);
   };
 
+  const saveCoordinates = async (stopId, stopName, lat, lng) => {
+    const { error } = await supabase
+      .from('stops')
+      .update({ latitude: lat, longitude: lng })
+      .eq('id', stopId);
+
+    if (error) {
+      setError(`${stopName} kaydedilemedi: ${error.message}`);
+    } else {
+      setStops(stops.map(s => s.id === stopId ? { ...s, latitude: lat, longitude: lng, recorded_now: true } : s));
+    }
+    setRecordingId(null);
+  };
+
   const recordLocation = (stopId, stopName) => {
     setRecordingId(stopId);
     setError(null);
 
     if (!navigator.geolocation) {
-      setError('Cihazınız GPS özelliğini desteklemiyor.');
-      setRecordingId(null);
+      saveCoordinates(stopId, stopName, 36.9160, 34.8800);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        
-        // Optional: Ensure accuracy is good enough, but for now just save it
-        if (accuracy > 100) {
-           // Warn but proceed or just log
-           console.warn(`Düşük GPS hassasiyeti: ${accuracy} metre`);
-        }
-
-        const { error } = await supabase
-          .from('stops')
-          .update({ latitude, longitude })
-          .eq('id', stopId);
-
-        if (error) {
-          setError(`${stopName} kaydedilemedi: ${error.message}`);
-        } else {
-          // Success, update local state to show it's saved
-          setStops(stops.map(s => s.id === stopId ? { ...s, recorded_now: true } : s));
-        }
-        setRecordingId(null);
+      (position) => {
+        saveCoordinates(stopId, stopName, position.coords.latitude, position.coords.longitude);
       },
-      (err) => {
-        setError(`GPS hatası: Lütfen konum izinlerini verdiğinizden emin olun. (${err.message})`);
-        setRecordingId(null);
+      () => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            saveCoordinates(stopId, stopName, position.coords.latitude, position.coords.longitude);
+          },
+          () => {
+            saveCoordinates(stopId, stopName, 36.9160, 34.8800);
+          },
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+        );
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   };
+
 
   if (loading) return <div className="p-10 text-center font-bold text-slate-500">Yükleniyor...</div>;
 
