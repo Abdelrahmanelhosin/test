@@ -75,7 +75,7 @@ const DriverDetail = () => {
                 <button onClick={() => navigate('/')} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 active:scale-90" title="Ana Sayfa">
                    <Home size={22} />
                 </button>
-                <button onClick={() => navigate('/map')} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 active:scale-90" title="Haritaya Dön">
+                <button onClick={() => navigate(-1)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 active:scale-90" title="Haritaya Dön">
                    <ChevronDown size={24} />
                 </button>
              </div>

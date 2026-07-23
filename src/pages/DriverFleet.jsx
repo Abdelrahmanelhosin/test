@@ -120,7 +120,7 @@ const DriverFleet = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                onClick={() => navigate(`/driver/${car.profiles?.id}`)}
+                onClick={() => navigate(`/driver/${car.id}`)}
                 className={`p-5 rounded-[2rem] border shadow-sm flex flex-col gap-3 cursor-pointer transition-all active:scale-95 ${
                   isMe ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-slate-100'
                 }`}
