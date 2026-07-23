@@ -2,17 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { MapPin, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// Helper to calculate distance in km between two lat/lon coordinates
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-};
+import { calculateDistanceMeters, checkAndTriggerAutomaticSpeech } from '../utils/transitEngine';
 
 const LocationTracker = ({ userProfile }) => {
   const [permissionState, setPermissionState] = useState('prompt'); // 'granted', 'prompt', 'denied'
@@ -56,7 +46,12 @@ const LocationTracker = ({ userProfile }) => {
           setPermissionState('granted');
           const { latitude, longitude, speed, heading } = position.coords;
 
-          // 1. Calculate Traffic Congestion Status (P2P Traffic Radar)
+          // 1. Automatic Speech Announcement Engine
+          if (stopsRef.current.length > 0) {
+            checkAndTriggerAutomaticSpeech(latitude, longitude, stopsRef.current);
+          }
+
+          // 2. Calculate Traffic Congestion Status (P2P Traffic Radar)
           // Geolocation speed is in m/s. 5 km/h = 1.38 m/s.
           let trafficStatus = 'clear';
           const speedVal = speed || 0;
@@ -91,22 +86,22 @@ const LocationTracker = ({ userProfile }) => {
             updated_at: new Date().toISOString()
           }, { onConflict: 'driver_id' });
 
-          // 2. Auto-Lap/Round Detection
+          // 3. Auto-Lap/Round Detection
           if (activeShift && stopsRef.current.length > 0) {
             const currentStops = stopsRef.current;
             const firstStop = currentStops[0];
 
             // Add stop to visited stops list if within 40m
             currentStops.forEach(stop => {
-              const dist = calculateDistance(latitude, longitude, stop.latitude, stop.longitude);
-              if (dist < 0.04) {
+              const dist = calculateDistanceMeters(latitude, longitude, stop.latitude, stop.longitude);
+              if (dist <= 40) {
                 visitedStopsRef.current.add(stop.id);
               }
             });
 
             // If back at first stop and visited at least half of the stops, complete a lap
-            const distToFirst = calculateDistance(latitude, longitude, firstStop.latitude, firstStop.longitude);
-            if (distToFirst < 0.04 && visitedStopsRef.current.size >= Math.ceil(currentStops.length / 2)) {
+            const distToFirst = calculateDistanceMeters(latitude, longitude, firstStop.latitude, firstStop.longitude);
+            if (distToFirst <= 40 && visitedStopsRef.current.size >= Math.ceil(currentStops.length / 2)) {
               const nextLaps = (activeShift.laps_completed || 0) + 1;
               await supabase
                 .from('shift_logs')

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ChevronRight, ArrowDown, MapPin, RadioTower, Heart, MessageSquare, PhoneCall, Radio, AlertCircle, X, Shield, Fuel, Gauge, Play, Square, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { calculateDistanceMeters, calculateETA } from '../utils/transitEngine';
+
 
 const DriverHome = () => {
   const navigate = useNavigate();
@@ -285,14 +287,6 @@ const DriverHome = () => {
     updateTelemetry(stopData);
   };
 
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-  };
-
   const updateTelemetry = async (initialStops = null) => {
     const currentStops = initialStops || stops;
     const { data: { user } } = await supabase.auth.getUser();
@@ -300,31 +294,53 @@ const DriverHome = () => {
     const { data: allLocs } = await supabase.from('vehicle_locations').select('*, profiles(full_name), vehicles(plate_number)');
     if (allLocs) {
       const myLoc = allLocs.find(l => l.driver_id === user.id);
-      const others = allLocs.filter(l => l.driver_id !== user.id).map(o => ({ ...o, dist: myLoc ? calculateDistance(myLoc.latitude, myLoc.longitude, o.latitude, o.longitude) : 0 })).sort((a, b) => a.dist - b.dist);
+      const others = allLocs.filter(l => l.driver_id !== user.id).map(o => {
+        const distMeters = myLoc ? calculateDistanceMeters(myLoc.latitude, myLoc.longitude, o.latitude, o.longitude) : 0;
+        return {
+          ...o,
+          distKm: distMeters / 1000,
+          distMeters
+        };
+      }).sort((a, b) => a.distMeters - b.distMeters);
+
       const ondeki = others[0];
       const arka = others[1] || others[0];
 
       let nearestStopName = 'YOLDA';
+      let nextStopEta = '0 dk';
       if (myLoc && currentStops.length > 0) {
         let minDist = Infinity;
+        let closestStopObj = null;
         currentStops.forEach(stop => {
-          const dist = calculateDistance(myLoc.latitude, myLoc.longitude, stop.latitude, stop.longitude);
-          if (dist < minDist) {
-            minDist = dist;
+          const distMeters = calculateDistanceMeters(myLoc.latitude, myLoc.longitude, stop.latitude, stop.longitude);
+          if (distMeters < minDist) {
+            minDist = distMeters;
+            closestStopObj = stop;
             nearestStopName = stop.name;
           }
         });
+
+        if (closestStopObj) {
+          const etaObj = calculateETA(minDist, myLoc.speed || 0, myLoc.traffic_status);
+          nextStopEta = etaObj.formattedEta;
+        }
       }
 
       if (myLoc) {
+        // Calculate gap time in minutes to bus in front based on distance & speed
+        const gapKmVal = ondeki ? ondeki.distKm : 1.2;
+        const gapMinVal = ondeki ? calculateETA(ondeki.distMeters, myLoc.speed || 0, ondeki.traffic_status).formattedEta : '3 dk';
+        const arkadakiMinVal = arka ? calculateETA(arka.distMeters, myLoc.speed || 0, arka.traffic_status).formattedEta : '4 dk';
+
         setTelemetry({
           speed: Math.round(myLoc.speed || 0),
-          gapKm: ondeki ? ondeki.dist.toFixed(1) : '289.8',
-          gapMin: ondeki ? `${Math.floor((ondeki.dist / 20) * 60).toString().padStart(2, '0')}:${Math.floor(((ondeki.dist / 20) * 3600) % 60).toString().padStart(2, '0')}` : '869:25',
-          colleagueId: ondeki ? ondeki.id : null,
-          colleagueName: ondeki ? (ondeki.vehicles?.plate_number || '34 AHM 555') : '34 AHM 555',
+          gapMin: gapMinVal,
+          gapKm: gapKmVal.toFixed(1),
+          colleagueId: ondeki ? ondeki.driver_id : null,
+          colleagueName: ondeki?.vehicles?.plate_number || ondeki?.profiles?.full_name || 'Öndeki Araç',
           currentLoc: nearestStopName.toUpperCase(),
-          arkadakiMin: arka ? `${Math.floor((arka.dist / 20) * 60).toString().padStart(2, '0')}:${Math.floor(((arka.dist / 20) * 3600) % 60).toString().padStart(2, '0')}` : '12:20'
+          nextStopEta: nextStopEta,
+          arkadakiMin: arkadakiMinVal
         });
       }
     }
