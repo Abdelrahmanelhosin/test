@@ -268,8 +268,13 @@ export default function AdminStops() {
               <div className="bg-slate-50 p-3 rounded-2xl flex justify-between items-center text-[10px] text-slate-500 font-bold border border-slate-100/50">
                 <div className="flex items-center gap-1.5">
                   <MapPin size={12} className="text-indigo-500" />
-                  <span>Enlem: {stop.latitude?.toFixed(4) || '36.9160'}, Boylam: {stop.longitude?.toFixed(4) || '34.8800'}</span>
+                  <span>Enlem: {stop.latitude ? Number(stop.latitude).toFixed(4) : '36.9160'}, Boylam: {stop.longitude ? Number(stop.longitude).toFixed(4) : '34.8800'}</span>
                 </div>
+                {stop.latitude && stop.longitude && (
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 flex items-center gap-1">
+                    <CheckCircle2 size={10} /> KAYITLI
+                  </span>
+                )}
               </div>
 
               {/* Record GPS Button */}
@@ -289,7 +294,7 @@ export default function AdminStops() {
                  ) : stop.recorded_now ? (
                    <><CheckCircle2 size={14} /> BAŞARIYLA GÜNCELLENDİ</>
                  ) : (
-                   <><Navigation size={14} /> ŞU ANKİ KONUMU KAYDET</>
+                   <><Navigation size={14} /> {stop.latitude && stop.longitude ? 'KONUMU GÜNCELLE' : 'ŞU ANKİ KONUMU KAYDET'}</>
                  )}
               </button>
             </motion.div>
