@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { MapPin, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { calculateDistanceMeters, checkAndTriggerAutomaticSpeech } from '../utils/transitEngine';
+import { calculateDistanceMeters, checkAndTriggerAutomaticSpeech, getDistanceToRoute } from '../utils/transitEngine';
 
 const LocationTracker = ({ userProfile }) => {
   const [permissionState, setPermissionState] = useState('prompt'); // 'granted', 'prompt', 'denied'
@@ -75,6 +75,16 @@ const LocationTracker = ({ userProfile }) => {
 
           const vehicleId = activeShift?.vehicle_id || null;
 
+          // Calculate Route Deviation (Geofencing Threshold = 100 meters)
+          let isOffRoute = false;
+          let deviationDistance = 0;
+          if (stopsRef.current.length > 0) {
+            deviationDistance = getDistanceToRoute(latitude, longitude, stopsRef.current);
+            if (deviationDistance > 100) {
+              isOffRoute = true;
+            }
+          }
+
           await supabase.from('vehicle_locations').upsert({
             driver_id: userProfile.id,
             vehicle_id: vehicleId,
@@ -83,6 +93,8 @@ const LocationTracker = ({ userProfile }) => {
             speed: speedVal * 3.6, // Store in km/h
             heading: heading || 0,
             traffic_status: trafficStatus,
+            is_off_route: isOffRoute,
+            deviation_distance: deviationDistance,
             updated_at: new Date().toISOString()
           }, { onConflict: 'driver_id' });
 

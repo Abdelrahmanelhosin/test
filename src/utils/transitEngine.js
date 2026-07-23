@@ -44,6 +44,71 @@ export const calculateBearing = (lat1, lon1, lat2, lon2) => {
 };
 
 /**
+ * Calculates the shortest distance in meters from a point (px, py) to a line segment (ax, ay) to (bx, by)
+ * Uses a flat-earth Euclidean approximation which is highly accurate for city-level distances.
+ */
+const pointToSegmentDistanceMeters = (pLat, pLng, aLat, aLng, bLat, bLng) => {
+  const R = 6371000;
+  // Convert to Cartesian coordinates scaled to meters
+  const x_p = pLng * (Math.PI / 180) * R * Math.cos(pLat * Math.PI / 180);
+  const y_p = pLat * (Math.PI / 180) * R;
+  
+  const x_a = aLng * (Math.PI / 180) * R * Math.cos(aLat * Math.PI / 180);
+  const y_a = aLat * (Math.PI / 180) * R;
+
+  const x_b = bLng * (Math.PI / 180) * R * Math.cos(bLat * Math.PI / 180);
+  const y_b = bLat * (Math.PI / 180) * R;
+
+  const dx = x_b - x_a;
+  const dy = y_b - y_a;
+
+  if (dx === 0 && dy === 0) {
+    return Math.sqrt((x_p - x_a)**2 + (y_p - y_a)**2);
+  }
+
+  // Calculate the projection of P onto the line AB
+  const t = ((x_p - x_a) * dx + (y_p - y_a) * dy) / (dx * dx + dy * dy);
+  
+  // Constrain to the segment
+  const clampedT = Math.max(0, Math.min(1, t));
+
+  const x_closest = x_a + clampedT * dx;
+  const y_closest = y_a + clampedT * dy;
+
+  // Distance from P to the closest point on segment
+  return Math.sqrt((x_p - x_closest)**2 + (y_p - y_closest)**2);
+};
+
+/**
+ * Calculates the minimum deviation distance from the vehicle's location to the entire polyline route
+ * Returns the shortest distance in meters to any segment connecting consecutive stops.
+ */
+export const getDistanceToRoute = (currentLat, currentLng, stops = []) => {
+  if (!stops || stops.length < 2) return 0; // Cannot form a route with less than 2 stops
+
+  let minDistance = Infinity;
+
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i];
+    const b = stops[i + 1];
+    
+    if (!a.latitude || !a.longitude || !b.latitude || !b.longitude) continue;
+
+    const dist = pointToSegmentDistanceMeters(
+      currentLat, currentLng,
+      a.latitude, a.longitude,
+      b.latitude, b.longitude
+    );
+
+    if (dist < minDistance) {
+      minDistance = dist;
+    }
+  }
+
+  return minDistance === Infinity ? 0 : Math.round(minDistance);
+};
+
+/**
  * Calculates real-time dynamic ETA (Estimated Time of Arrival) in minutes
  * @param {number} distanceMeters Distance to target stop in meters
  * @param {number} currentSpeedKmh Current vehicle speed in km/h (0 if stationary)

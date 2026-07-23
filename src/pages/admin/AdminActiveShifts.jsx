@@ -51,10 +51,10 @@ export default function AdminActiveShifts() {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch all drivers
+      // 1. Fetch all drivers with their live vehicle locations
       const { data: driverData, error: driverErr } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, vehicle_locations(*)')
         .eq('role', 'driver')
         .order('full_name', { ascending: true });
 
@@ -205,11 +205,19 @@ export default function AdminActiveShifts() {
                   </div>
                 </div>
 
-                <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                  driver.isWorking ? 'bg-emerald-50 text-emerald-700 animate-pulse' : 'bg-slate-50 text-slate-500'
-                }`}>
-                  {driver.isWorking ? 'GÖREVDE' : 'MESAİ DIŞI'}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                    driver.isWorking ? 'bg-emerald-50 text-emerald-700 animate-pulse' : 'bg-slate-50 text-slate-500'
+                  }`}>
+                    {driver.isWorking ? 'GÖREVDE' : 'MESAİ DIŞI'}
+                  </span>
+                  
+                  {driver.isWorking && driver.vehicle_locations && driver.vehicle_locations.length > 0 && driver.vehicle_locations[0].is_off_route && (
+                    <span className="text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200 shadow-sm animate-pulse flex items-center gap-1">
+                      <AlertTriangle size={10} /> ROTADAN ÇIKTI ({driver.vehicle_locations[0].deviation_distance}m)
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Active shift detail if working */}
