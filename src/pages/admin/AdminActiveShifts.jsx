@@ -234,6 +234,8 @@ export default function AdminActiveShifts() {
                   <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-emerald-100/30 text-[9px] font-bold text-emerald-700">
                     <p>Başlangıç Km: {driver.activeShift.start_odometer} KM</p>
                     <p>Başlangıç Yakıt: %{driver.activeShift.start_fuel}</p>
+                    <p className="flex items-center gap-1 text-emerald-800"><Users size={10}/> Yolcu: {driver.activeShift.passenger_count || 0}</p>
+                    <p>Tur Sayısı: {driver.activeShift.laps_completed || 0}</p>
                   </div>
                   <button
                     onClick={() => handleViewRoute(
